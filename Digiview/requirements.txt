@@ -1,0 +1,9 @@
+streamlit
+pandas
+nltk==3.8.1
+plotly==5.17.0
+matplotlib
+stop-words==2015.2.23.1
+emoji==2.8.0
+emojis==0.7.0
+wordcloud
