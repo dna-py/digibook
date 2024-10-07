@@ -106,7 +106,7 @@ def box_plot_emotions(df):
 def bar_chart_top_words(df, num_words=10):
     try:
         nltk.data.path.append('app/static/nltk_data')
-        list_words = df['comment'].astype(str).str.lower()
+        list_words = df['comments'].astype(str).str.lower()
         list_words = list_words.apply(nltk.tokenize.word_tokenize)
         # Lista de palabras a excluir
         stop_words_en = get_stop_words('en')
@@ -182,7 +182,7 @@ def bar_chart_top_emoji(df, num_emojis=10):
 def wordcloud_words(df):
     try:
         nltk.data.path.append('app/static/nltk_data')
-        list_words = df['comment'].astype(str).str.lower()
+        list_words = df['comments'].astype(str).str.lower()
         list_words = list_words.apply(nltk.tokenize.word_tokenize)
         # Lista de palabras a excluir
         stop_words_en = get_stop_words('en')

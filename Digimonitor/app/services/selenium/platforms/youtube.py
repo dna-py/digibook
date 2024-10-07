@@ -94,17 +94,18 @@ def ExtractDataPageYouTube(driver: webdriver.Firefox) -> dict:
             - id_channel (str): Unique ID of the channel (URL).
             - title (str): Title of the video.
             - description (str): Description of the video.
-            - views (str): Number of views for the video.
-            - count_comment (str): Number of comments on the video.
+            - count_views (str): Number of views for the video.
+            - count_comments (str): Number of comments on the video.
             - count_likes (str): Number of likes for the video.
             - upload (str): Upload date of the video.
-            - comment (dict): Dictionary containing details about comments, including:
+            - data (dict): Dictionary containing details about comments, including:
                 - username (list of str): Usernames of commenters.
-                - emoji (list of list): Emojis used in comments.
+                - comment_and_emojis (list of list): Comment and emojis used in comments.
                 - n_like (list of str): Number of likes on each comment.
                 - n_response (list of str): Number of responses to each comment.
                 - date (list of str): Dates of each comment.
     """
+    _expand_description(driver)
     data = {
         "date_scraping": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "url_post": _extract_url_post(driver),
@@ -113,30 +114,57 @@ def ExtractDataPageYouTube(driver: webdriver.Firefox) -> dict:
         "id_channel": _extract_id_channel(driver),
         "title": _extract_title_post(driver),
         'description': _extract_description(driver),
-        "views": _extract_count_views(driver),
-        "count_comment": _extract_count_comments(driver),
+        "count_views": _extract_count_views(driver),
+        "count_comments": _extract_count_comments(driver),
         "count_likes": _extract_count_likes(driver),
         "upload": _extract_upload(driver),
-        "comment": {
+        "data": {
             "username": _extract_usernames(driver),
-            "emoji": _extract_comments_emojis(driver),
+            "comment_and_emojis": _extract_comments_emojis(driver),
             "n_like": _extract_n_likes(driver),
             "n_response": _extract_n_responses(driver),
             "date": _extract_dates(driver)
         }
     }
     # Print sizes of extracted data for verification
-    username = len(data['comment'].get('username', []))
-    emoji = len(data['comment'].get('emoji', []))
-    n_like = len(data['comment'].get('n_like', []))
-    n_response = len(data['comment'].get('n_response', []))
-    date = len(data['comment'].get('date', []))
+    username = len(data['data'].get('username', []))
+    comment_and_emojis = len(data['data'].get('comment_and_emojis', []))
+    n_like = len(data['data'].get('n_like', []))
+    n_response = len(data['data'].get('n_response', []))
+    date = len(data['data'].get('date', []))
     LogMessage("INFO", f'Size of "username": {username}')
-    LogMessage("INFO", f'Size of "emoji": {emoji}')
+    LogMessage("INFO", f'Size of "comment_and_emojis": {comment_and_emojis}')
     LogMessage("INFO", f'Size of "n_like": {n_like}')
     LogMessage("INFO", f'Size of "n_response": {n_response}')
     LogMessage("INFO", f'Size of "date": {date}')
     return data
+
+
+def _expand_description(driver: webdriver.Firefox) -> str:
+    """
+    Extracts the description of the video from the YouTube page.
+
+    Args:
+        driver (webdriver.Firefox): The WebDriver instance used to interact with the YouTube page.
+
+    Returns:
+        str: The description of the video.
+    """
+    xpath1 = '//tp-yt-paper-button[@id="expand"]'
+    xpath2 = '//yt-attributed-string[@class="style-scope ytd-text-inline-expander"]'
+    try:
+        driver.find_element(By.XPATH, xpath1).click()        
+        try:
+            return driver.find_element(By.XPATH, xpath2).text
+        except NoSuchElementException:
+            LogMessage("WARNING", f"Element with XPath in '_expand_description' not found.")
+            return 'None'
+    except NoSuchElementException:
+        LogMessage("WARNING", f"Element with XPath '_expand_description' not found.")
+        return 'None'
+    except Exception as error:
+        LogMessage("WARNING", f"An error occurred in function '_expand_description'. Error: {str(error)}")
+        return 'None'
 
 
 def _extract_url_post(driver: webdriver.Firefox) -> str:
@@ -151,10 +179,11 @@ def _extract_url_post(driver: webdriver.Firefox) -> str:
     """
     try:
         return driver.current_url
-    except Exception as e:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"An error occurred in function '{func_name}'. Docstring: {docstring}. Error: {str(e)}")
+    except NoSuchElementException:
+        LogMessage("WARNING", f"Element with XPath '_extract_url_post' not found.")
+        return 'None'
+    except Exception as error:
+        LogMessage("WARNING", f"An error occurred in function '_extract_url_post'. Error: {str(error)}")
         return 'None'
 
 
@@ -172,14 +201,10 @@ def _extract_name_channel(driver: webdriver.Firefox) -> str:
         xpath = '//yt-formatted-string[@class="style-scope ytd-channel-name complex-string"]/a'
         return driver.find_element(By.XPATH, xpath).text
     except NoSuchElementException:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"Element with XPath '{xpath}' not found in function '{func_name}'. Docstring: {docstring}")
+        LogMessage("WARNING", f"Element with XPath '_extract_name_channel' not found.")
         return 'None'
-    except Exception as e:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"An error occurred in function '{func_name}'. Docstring: {docstring}. Error: {str(e)}")
+    except Exception as error:
+        LogMessage("WARNING", f"An error occurred in function '_extract_name_channel'. Error: {str(error)}")
         return 'None'
 
 
@@ -197,14 +222,10 @@ def _extract_id_channel(driver: webdriver.Firefox) -> str:
         xpath = '//yt-formatted-string[@class="style-scope ytd-channel-name complex-string"]/a'
         return driver.find_element(By.XPATH, xpath).get_attribute('href')
     except NoSuchElementException:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"Element with XPath '{xpath}' not found in function '{func_name}'. Docstring: {docstring}")
+        LogMessage("WARNING", f"Element with XPath '_extract_id_channel' not found.")
         return 'None'
-    except Exception as e:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"An error occurred in function '{func_name}'. Docstring: {docstring}. Error: {str(e)}")
+    except Exception as error:
+        LogMessage("WARNING", f"An error occurred in function '_extract_id_channel'. Error: {str(error)}")
         return 'None'
 
 
@@ -222,14 +243,10 @@ def _extract_count_subscribers(driver: webdriver.Firefox) -> str:
         xpath = '//yt-formatted-string[@class="style-scope ytd-video-owner-renderer"]'
         return driver.find_element(By.XPATH, xpath).text
     except NoSuchElementException:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"Element with XPath '{xpath}' not found in function '{func_name}'. Docstring: {docstring}")
+        LogMessage("WARNING", f"Element with XPath '_extract_count_subscribers' not found.")
         return 'None'
-    except Exception as e:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"An error occurred in function '{func_name}'. Docstring: {docstring}. Error: {str(e)}")
+    except Exception as error:
+        LogMessage("WARNING", f"An error occurred in function '_extract_count_subscribers'. Error: {str(error)}")
         return 'None'
 
 
@@ -247,15 +264,12 @@ def _extract_title_post(driver: webdriver.Firefox) -> str:
         xpath = '//h1/yt-formatted-string[@class="style-scope ytd-watch-metadata"]'
         return driver.find_element(By.XPATH, xpath).text
     except NoSuchElementException:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"Element with XPath '{xpath}' not found in function '{func_name}'. Docstring: {docstring}")
+        LogMessage("WARNING", f"Element with XPath '_extract_title_post' not found.")
         return 'None'
-    except Exception as e:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"An error occurred in function '{func_name}'. Docstring: {docstring}. Error: {str(e)}")
+    except Exception as error:
+        LogMessage("WARNING", f"An error occurred in function '_extract_title_post'. Error: {str(error)}")
         return 'None'
+
 
 
 def _extract_count_views(driver: webdriver.Firefox) -> str:
@@ -268,28 +282,14 @@ def _extract_count_views(driver: webdriver.Firefox) -> str:
     Returns:
         str: The number of views.
     """
-    xpath1 = '//span[@class="style-scope yt-formatted-string bold"]'
-    xpath2 = '//div[@id="info-container"]'
+    xpath = '//yt-formatted-string[@class="style-scope ytd-watch-info-text"]//span'
     try:
-        # Attempt to extract the view count using the primary XPath
-        return driver.find_element(By.XPATH, xpath1).text
+        return driver.find_element(By.XPATH, xpath).text
     except NoSuchElementException:
-        # If primary XPath fails, attempt to extract from the alternative XPath
-        try:
-            get_item = driver.find_element(By.XPATH, xpath2)
-            text = get_item.text.replace('\n', '').strip()
-            return text
-        except NoSuchElementException:
-            # Handle the case where neither XPath finds the element
-            func_name = inspect.currentframe().f_code.co_name
-            docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-            LogMessage("WARNING", f"Element with XPath '{xpath1}' and '{xpath2}' not found in function '{func_name}'. Docstring: {docstring}")
-            return 'None'
-    except Exception as e:
-        # Handle any other unexpected errors
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"An error occurred in function '{func_name}'. Docstring: {docstring}. Error: {str(e)}")
+        LogMessage("WARNING", f"Element with XPath in '_extract_count_views' not found.")
+        return 'None'
+    except Exception as error:
+        LogMessage("WARNING", f"An error occurred in function '_extract_count_views'. Error: {str(error)}")
         return 'None'
 
 
@@ -308,14 +308,10 @@ def _extract_count_comments(driver: webdriver.Firefox) -> str:
         elements = [item.text for item in driver.find_elements(By.XPATH, xpath)]
         return ' '.join(elements)
     except NoSuchElementException:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"Element with XPath '{xpath}' not found in function '{func_name}'. Docstring: {docstring}")
+        LogMessage("WARNING", f"Element with XPath '_extract_count_comments' not found.")
         return 'None'
-    except Exception as e:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"An error occurred in function '{func_name}'. Docstring: {docstring}. Error: {str(e)}")
+    except Exception as error:
+        LogMessage("WARNING", f"An error occurred in function '_extract_count_comments'. Error: {str(error)}")
         return 'None'
 
 
@@ -330,17 +326,15 @@ def _extract_count_likes(driver: webdriver.Firefox) -> str:
         str: The number of likes.
     """
     try:
-        xpath = '//button[@class="yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-leading yt-spec-button-shape-next--segmented-start"]//div[@class="yt-spec-button-shape-next__button-text-content"]'
-        return driver.find_element(By.XPATH, xpath).text
+        xpath = '//button[@class="yt-spec-button-shape-next yt-spec-button-shape-next--tonal yt-spec-button-shape-next--mono yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-leading yt-spec-button-shape-next--segmented-start yt-spec-button-shape-next--enable-backdrop-filter-experiment"]'
+        button_element = driver.find_element(By.XPATH, xpath)
+        aria_label = button_element.get_attribute('aria-label')
+        return aria_label
     except NoSuchElementException:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"Element with XPath '{xpath}' not found in function '{func_name}'. Docstring: {docstring}")
+        LogMessage("WARNING", f"Element with XPath in '_extract_count_likes' not found.")
         return 'None'
-    except Exception as e:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"An error occurred in function '{func_name}'. Docstring: {docstring}. Error: {str(e)}")
+    except Exception as error:
+        LogMessage("WARNING", f"An error occurred in function '_extract_count_likes'. Error: {str(error)}")
         return 'None'
 
 
@@ -354,24 +348,15 @@ def _extract_upload(driver: webdriver.Firefox) -> str:
     Returns:
         str: The upload date, or 'None' if unable to extract.
     """
-    xpath1 = '//span[@class="style-scope yt-formatted-string bold"]'
-    xpath2 = '//div[@id="info-container"]'
+    xpath = '//yt-formatted-string[@class="style-scope ytd-watch-info-text"]//span[last()]'
     try:
-        return driver.find_elements(By.XPATH, xpath1)[2].text
+        # Attempt to extract the view count using the primary XPath
+        return driver.find_element(By.XPATH, xpath).text
     except NoSuchElementException:
-        try:
-            get_item = driver.find_element(By.XPATH, xpath2)
-            text = get_item.text.replace('\n', '').strip()
-            return text
-        except NoSuchElementException:
-            func_name = inspect.currentframe().f_code.co_name
-            docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-            LogMessage("WARNING", f"Element with XPath '{xpath1}' and '{xpath2}' not found in function '{func_name}'. Docstring: {docstring}")
-            return 'None'
-    except Exception as e:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"An error occurred in function '{func_name}'. Docstring: {docstring}. Error: {str(e)}")
+        LogMessage("WARNING", f"Element with XPath in '_extract_upload' not found.")
+        return 'None'
+    except Exception as error:
+        print("WARNING", f"An error occurred in function '_extract_upload'. Error: {str(error)}")
         return 'None'
 
 
@@ -385,30 +370,14 @@ def _extract_description(driver: webdriver.Firefox) -> str:
     Returns:
         str: The description of the video.
     """
-    xpath1 = '//tp-yt-paper-button[@id="expand"]'
-    xpath2 = '//yt-attributed-string[@class="style-scope ytd-text-inline-expander"]'
-    xpath3 = '//ytd-text-inline-expander[@id="description-inline-expander"]'
+    xpath = '//yt-attributed-string[@class="style-scope ytd-text-inline-expander"]'
     try:
-        driver.find_element(By.XPATH, xpath1).click()        
-        try:
-            return driver.find_element(By.XPATH, xpath2).text
-        except NoSuchElementException:
-            func_name = inspect.currentframe().f_code.co_name
-            docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-            LogMessage("WARNING", f"Element with XPath '{xpath2}' not found in function '{func_name}'. Docstring: {docstring}")
-            return 'None'
+        return driver.find_element(By.XPATH, xpath).text
     except NoSuchElementException:
-        try:
-            return driver.find_element(By.XPATH, xpath3).text
-        except NoSuchElementException:
-            func_name = inspect.currentframe().f_code.co_name
-            docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-            LogMessage("WARNING", f"Element with XPath '{xpath1}' and '{xpath3}' not found in function '{func_name}'. Docstring: {docstring}")
-            return 'None'
-    except Exception as e:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"An error occurred in function '{func_name}'. Docstring: {docstring}. Error: {str(e)}")
+        LogMessage("WARNING", f"Element with XPath '_extract_description' not found.")
+        return 'None'
+    except Exception as error:
+        LogMessage("WARNING", f"An error occurred in function '_extract_description'. Error: {str(error)}")
         return 'None'
 
 
@@ -451,14 +420,10 @@ def _extract_usernames(driver: webdriver.Firefox) -> list:
             elements.append(text)
         return elements
     except NoSuchElementException:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"Element with XPath '{xpath}' not found in function '{func_name}'. Docstring: {docstring}")
+        LogMessage("WARNING", f"Element with XPath '_extract_usernames' not found.")
         return elements
-    except Exception as e:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"An error occurred in function '{func_name}'. Docstring: {docstring}. Error: {str(e)}")
+    except Exception as error:
+        LogMessage("WARNING", f"An error occurred in function '_extract_usernames'. Error: {str(error)}")
         return elements
 
 
@@ -488,14 +453,10 @@ def _extract_comments_emojis(driver: webdriver.Firefox) -> list:
                     elements.remove(item)
         return elements
     except NoSuchElementException:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"Element with XPath '{xpath}' not found in function '{func_name}'. Docstring: {docstring}")
+        LogMessage("WARNING", f"Element with XPath '_extract_comments_emojis' not found in function.")
         return elements
     except Exception as e:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"An error occurred in function '{func_name}'. Docstring: {docstring}. Error: {str(e)}")
+        LogMessage("WARNING", f"An error occurred in function '_extract_comments_emojis'. Error: {str(e)}")
         return elements
 
 
@@ -513,14 +474,10 @@ def _extract_n_likes(driver: webdriver.Firefox) -> list:
         xpath = '//span[@id="vote-count-middle"]'
         return [item.text for item in driver.find_elements(By.XPATH, xpath)]
     except NoSuchElementException:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"Element with XPath '{xpath}' not found in function '{func_name}'. Docstring: {docstring}")
+        LogMessage("WARNING", f"Element with XPath '_extract_n_likes' not found.")
         return []
-    except Exception as e:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"An error occurred in function '{func_name}'. Docstring: {docstring}. Error: {str(e)}")
+    except Exception as error:
+        LogMessage("WARNING", f"An error occurred in function '_extract_n_likes'. Error: {str(error)}")
         return []
 
 
@@ -536,10 +493,10 @@ def _extract_n_responses(driver: webdriver.Firefox) -> list:
     """
     elements = []
     try:
-        xpath = '//div[@class=" style-scope ytd-item-section-renderer style-scope ytd-item-section-renderer"]//ytd-comment-thread-renderer[@class="style-scope ytd-item-section-renderer"]'
+        xpath = '//ytd-comment-thread-renderer[@class="style-scope ytd-item-section-renderer"]//div[@id="replies"]'
         get_items = driver.find_elements(By.XPATH, xpath)    
         for comment_thread in get_items:
-            xpath1 = './/button[@class="yt-spec-button-shape-next yt-spec-button-shape-next--text yt-spec-button-shape-next--call-to-action yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-leading yt-spec-button-shape-next--align-by-text"]'
+            xpath1 = './/button[@class="yt-spec-button-shape-next yt-spec-button-shape-next--text yt-spec-button-shape-next--call-to-action yt-spec-button-shape-next--size-m yt-spec-button-shape-next--icon-leading yt-spec-button-shape-next--align-by-text yt-spec-button-shape-next--enable-backdrop-filter-experiment"]'
             try:
                 button = comment_thread.find_element(By.XPATH, xpath1)
                 element = button.get_attribute('aria-label')
@@ -548,14 +505,10 @@ def _extract_n_responses(driver: webdriver.Firefox) -> list:
             elements.append(element)
         return elements
     except NoSuchElementException:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"Element with XPath '{xpath}' not found in function '{func_name}'. Docstring: {docstring}")
+        LogMessage("WARNING", f"Element with XPath '_extract_n_responses' not found.")
         return elements
-    except Exception as e:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"An error occurred in function '{func_name}'. Docstring: {docstring}. Error: {str(e)}")
+    except Exception as error:
+        LogMessage("WARNING", f"An error occurred in function '_extract_n_responses'. Error: {str(error)}")
         return elements
 
 
@@ -573,12 +526,8 @@ def _extract_dates(driver: webdriver.Firefox) -> list:
         xpath = '//span[@id="published-time-text"]/a'
         return [i.text for i in driver.find_elements(By.XPATH, xpath)]
     except NoSuchElementException:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"Element with XPath '{xpath}' not found in function '{func_name}'. Docstring: {docstring}")
+        LogMessage("WARNING", f"Element with XPath '_extract_dates' not found.")
         return []
-    except Exception as e:
-        func_name = inspect.currentframe().f_code.co_name
-        docstring = inspect.getdoc(inspect.currentframe().f_back.f_locals[func_name])
-        LogMessage("WARNING", f"An error occurred in function '{func_name}'. Docstring: {docstring}. Error: {str(e)}")
+    except Exception as error:
+        LogMessage("WARNING", f"An error occurred in function '_extract_dates'. Error: {str(error)}")
         return []
