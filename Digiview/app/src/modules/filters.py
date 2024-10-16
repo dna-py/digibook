@@ -54,7 +54,7 @@ def filter_words():
 def filter_emotion():
     genre = st.radio(
         "Filter emotion",
-        ["ALL", "POS", "NEU", "NEG"],
+        ["ALL", "POS", "NEU", "NEG", 'EMOJI'],
         captions = None
         )
     if genre != 'ALL':
@@ -62,5 +62,5 @@ def filter_emotion():
         emotio.append(genre)
         return emotio
     else:
-        emotion = ['POS', 'NEU', 'NEG']
+        emotion = ['POS', 'NEU', 'NEG', 'EMOJI']
         return emotion

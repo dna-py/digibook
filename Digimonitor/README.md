@@ -11,16 +11,16 @@ pip install -r requirements.txt
 ## Usage
 To search for only one link:
 ```consol
-python -m digimonitor -p youtube "https://www.youtube.com/watch?v="
+python3 digimonitor.py -p youtube "https://www.youtube.com/watch?v="
 ```
 
 To search a list of links:
 ```consol
-python -m digimonitor -p youtube path/folder/lista_urls.txt
+python3 digimonitor.py -p youtube list_urls.txt
 ```
 
 ```consol
-usage: digimonitor.py [-h] [-r ROOT] -p {youtube} url
+usage: digimonitor.py [-h] [-r ROOT] -p {youtube,tiktok,instagram} url
 
 Web data extraction tool.
 
@@ -29,9 +29,10 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  -r ROOT, --root ROOT  Path to Firefox profile (optional)
-  -p {youtube}, --platform {youtube}
+  -r ROOT, --root ROOT  Path to Firefox profile (optional, but required for Instagram)
+  -p {youtube,tiktok,instagram}, --platform {youtube,tiktok,instagram}
                         Platform to process (mandatory)
+
 ```
 
 ## License

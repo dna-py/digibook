@@ -40,7 +40,7 @@ stopwords_add = ["''", "``", '', ',', '.', '...', '!', '?', 'y', 'si']
 
 def pie_chart_emotions(df): 
     try:
-        emotion = df["emotion_comment"]
+        emotion = df["sentiments"]
         emotion_counts = emotion.value_counts()
         emotion_counts_df = pd.DataFrame({
                                 'Emoción': emotion_counts.index, 
@@ -49,7 +49,8 @@ def pie_chart_emotions(df):
         color_mapping = {
             'POS': '#8DC63F',
             'NEG': '#FF5733',
-            'NEU': ' #A0A0A0'
+            'NEU': ' #A0A0A0',
+            'EMOJI': '#FFD700'
         }
         fig = px.pie(emotion_counts_df,
                     names='Emoción',
@@ -71,7 +72,7 @@ def box_plot_emotions(df):
     try:
 
         fig = px.box(df, 
-                    y="score_emotion",
+                    y="score_sentiments",
                     points="all",
                     title="Distribución de puntuación de emociones"
                     )

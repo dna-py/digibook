@@ -26,6 +26,11 @@ from selenium.common.exceptions import WebDriverException
 from app.services.selenium.driver.actions import FirefoxWebDriver
 from app.services.utils.detected import DetectPlatform
 from app.services.files.actions import DictionarySaveJSON, LogMessage
+from app.services.processing.youtube import YouTubeDataFormatter
+from app.services.processing.instagram import InstagramDataFormatter
+from app.services.processing.tiktok import TiktokDataFormatter
+from app.services.models.language import LanguageDetected
+from app.services.models.sentiment import SentimentAnalyzer
 
 
 def read_urls_from_file(file_path: str) -> list:
@@ -47,8 +52,11 @@ def main(url: str, root_path: str = None, platform: str = 'youtube'):
     driver = None
     try:
         # Validar la plataforma
-        if platform not in ['youtube']:
-            raise ValueError(f"Plataforma no soportada especificada: '{platform}'.")
+        if platform not in ['youtube', 'tiktok', 'instagram']:
+            raise ValueError(f"Unsupported platform specified: '{platform}'.")
+
+        if platform == 'instagram' and root_path is None:
+            raise ValueError("The '--root' argument is required for Instagram.")
 
         # Inicializar el driver del navegador
         driver = FirefoxWebDriver(root_path)
@@ -59,29 +67,71 @@ def main(url: str, root_path: str = None, platform: str = 'youtube'):
             url_list = read_urls_from_file(url)
         else:
             url_list = [url]
-
+        lang = LanguageDetected()
+        sentiment = SentimentAnalyzer()
         # Procesar cada URL
         for current_url in url_list:
             platform_detected = DetectPlatform(current_url)
             if platform_detected == platform:
                 driver.OpenPage(current_url)
+
                 if platform == 'youtube':
                     driver.ScrollDownPageYT()
                     data = driver.ExtractDataPageYT()
                     DictionarySaveJSON(
                         data,
                         name_folder='data/youtube',
-                        name_file=f'{datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")}_extract_{platform}.json'
+                        name_file=f'{datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")}_extract_{platform}_.json'
+                    )
+                    formatter_data = YouTubeDataFormatter(data)
+                    formatter_data = lang.format_data(formatter_data.data)
+                    formatter_data = sentiment.format_data(formatter_data)
+                    DictionarySaveJSON(
+                        formatter_data,
+                        name_folder='data/youtube',
+                        name_file=f'{datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")}_extract_{platform}_formatter.json'
+                    )
+
+                elif platform == 'tiktok':
+                    data = driver.ExtractDataPageTK()
+                    DictionarySaveJSON(
+                        data,
+                        name_folder='data/tiktok',
+                        name_file=f'{datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")}_extract_{platform}_.json'
+                    )
+                    formatter_data = TiktokDataFormatter(data)
+                    formatter_data = lang.format_data(formatter_data.data)
+                    formatter_data = sentiment.format_data(formatter_data)
+                    DictionarySaveJSON(
+                        formatter_data,
+                        name_folder='data/tiktok',
+                        name_file=f'{datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")}_extract_{platform}_formatter.json'
+                    )
+
+                elif platform == 'instagram':
+                    data = driver.ExtractDataPageIG()
+                    DictionarySaveJSON(
+                        data,
+                        name_folder='data/instagram',
+                        name_file=f'{datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")}_extract_{platform}_.json'
+                    )
+                    formatter_data = InstagramDataFormatter(data)
+                    formatter_data = lang.format_data(formatter_data.data)
+                    formatter_data = sentiment.format_data(formatter_data)
+                    DictionarySaveJSON(
+                        formatter_data,
+                        name_folder='data/instagram',
+                        name_file=f'{datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")}_extract_{platform}_formatter.json'
                     )
             else:
-                LogMessage("WARNING", f'URL: {current_url} no válida para la plataforma {platform}')
+                LogMessage("WARNING", f'URL: {current_url} not valid for the {platform} platform')
 
     except ValueError as error:
         LogMessage("ERROR", str(error))
     except WebDriverException as error:
-        LogMessage("WARNING", "Se produjo una WebDriverException: " + str(error))
+        LogMessage("WARNING", "A WebDriverException occurred: " + str(error))
     except KeyboardInterrupt:
-        LogMessage("WARNING", "Programa interrumpido por el usuario.")
+        LogMessage("WARNING", "Program interrupted by the user.")
     finally:
         if driver:
             driver.StopDriver()
@@ -91,8 +141,8 @@ def main(url: str, root_path: str = None, platform: str = 'youtube'):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Web data extraction tool.')
     parser.add_argument('url', help='A single URL or a .txt file with URLs (mandatory)')
-    parser.add_argument('-r', '--root', default=None, help='Path to Firefox profile (optional)')
-    parser.add_argument('-p', '--platform', choices=['youtube'], required=True, help='Platform to process (mandatory)')
+    parser.add_argument('-r', '--root', default=None, help='Path to Firefox profile (optional, but required for Instagram)')
+    parser.add_argument('-p', '--platform', choices=['youtube', 'tiktok', 'instagram'], required=True, help='Platform to process (mandatory)')
 
     args = parser.parse_args()
 

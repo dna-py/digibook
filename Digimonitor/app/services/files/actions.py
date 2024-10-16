@@ -41,6 +41,7 @@ def DictionarySaveJSON(dictionary: dict, name_folder: str, name_file: str):
     """
     try:
         output_path = os.path.join(name_folder, name_file)
+        os.makedirs(name_folder, exist_ok=True)
         with open(output_path, 'w', encoding='utf-8') as file:
             json.dump(dictionary, file, ensure_ascii=False, indent=4)
         LogMessage('OK', f"Data saved successfully in {output_path}.")

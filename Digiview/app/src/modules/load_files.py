@@ -39,22 +39,22 @@ def select_json(output_folder):
 
 def select_df(json_data):
     data = {
-        'usernames': json_data["data"]["username"],
-        'comments': [item[0] for item in json_data["data"]["comment_and_emojis"]],
-        'emojis': [item[1] for item in json_data["data"]["comment_and_emojis"]],
-        'date_comment': json_data["data"]["date"],
-        'likes_comment': json_data["data"]["n_like"]
+        'usernames': json_data["data"]["usernames"],
+        'comments': json_data["data"]["comments"],
+        'emojis': json_data["data"]["emojis"],
     }
-    if 'n_response' in json_data["data"]:
-        data['n_response'] = json_data["data"]["n_response"]
-    if 'lang' in json_data["data"]:
-        data['lang'] = json_data["data"]["lang"]
-    if 'emotion_comment' in json_data["data"]:
-        data['emotion_comment'] = json_data["data"]["emotion_comment"]
-    if 'score_emotion' in json_data["data"]:
-        data['score_emotion'] = json_data["data"]["score_emotion"]
+    if 'n_likes' in json_data["data"]:
+        data['n_likes'] = json_data["data"]["n_likes"]
+    if 'n_responses' in json_data["data"]:
+        data['n_responses'] = json_data["data"]["n_responses"]
+    if 'date' in json_data["data"]:
+        data['date'] = json_data["data"]["date"]
+    if 'langs' in json_data["data"]:
+        data['langs'] = json_data["data"]["langs"]
+    if 'sentiments' in json_data["data"]:
+        data['sentiments'] = json_data["data"]["sentiments"]
+    if 'score_sentiments' in json_data["data"]:
+        data['score_sentiments'] = json_data["data"]["score_sentiments"]
 
     df = pd.DataFrame(data)
-    df['emojis'] = df['emojis'].apply(lambda x: ''.join(x))
-    df["likes_comment"] = df["likes_comment"].replace('', "0")
     return df

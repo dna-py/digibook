@@ -23,22 +23,28 @@ import re
 
 def DetectPlatform(url: str) -> str:
     """
-    Detects whether the provided URL belongs to YouTube or is invalid.
+    Detects whether the provided URL belongs to YouTube, TikTok, Instagram, or is invalid.
 
     This function uses regular expressions to identify if the given URL matches
-    the patterns for YouTube If the URL matches none of these patterns, it is
-    considered invalid.
+    the patterns for YouTube, TikTok or Instagram. If the URL matches none of these patterns,
+    it is considered invalid.
 
     Args:
         url (str): The URL to analyze.
 
     Returns:
-        str: The detected platform. It returns 'youtube' if the URL matches YouTube,
-            and 'INVALIDURL' if it matches neither.
+        str: The detected platform. It returns 'youtube', 'tiktok', or 'instagram' if the URL matches
+             those platforms, and 'INVALIDURL' if it matches none.
     """
     youtube_pattern = re.compile(r'https?://(www\.)?(youtube\.com/watch\?v=|youtu\.be/)[\w-]+')
+    tiktok_pattern = re.compile(r'https?://(www\.)?tiktok\.com/@[\w.]+/video/\d+')
+    instagram_pattern = re.compile(r'https?://(www\.)?instagram\.com/p/[\w-]+/?')
 
     if youtube_pattern.match(url):
         return 'youtube'
+    elif tiktok_pattern.match(url):
+        return 'tiktok'
+    elif instagram_pattern.match(url):
+        return 'instagram'
     else:
         return 'INVALIDURL'

@@ -41,9 +41,9 @@ def body():
             col1, col2 = st.columns([1, 4])
             with col1:
                 df = select_df(json_file)
-                if 'emotion_comment' in df.columns:
+                if 'sentiments' in df.columns:
                     emotion_filter = filter_emotion()
-                    filter_df_emotion = df['emotion_comment'].isin(emotion_filter)
+                    filter_df_emotion = df['sentiments'].isin(emotion_filter)
                     df_filter = df[filter_df_emotion]
                 else:
                     df_filter = df
@@ -53,7 +53,7 @@ def body():
             with col2:
                 st.dataframe(df_filter)
 
-        if 'emotion_comment' in df.columns:
+        if 'sentiments' in df.columns:
             with st.expander("Análisis de sentimiento en comentarios", expanded=True):
                 col1, col2 = st.columns(2)
                 with col1:

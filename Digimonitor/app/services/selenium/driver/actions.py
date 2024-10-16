@@ -23,6 +23,8 @@ import time
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from app.services.selenium.platforms.youtube import ScrollDownPageYouTube, ExtractDataPageYouTube
+from app.services.selenium.platforms.tiktok import ExtractDataPageTiktok
+from app.services.selenium.platforms.instagram import ExtractDataPageInstagram
 from app.services.files.actions import LogMessage
 
 
@@ -119,4 +121,34 @@ class FirefoxWebDriver:
         LogMessage("OK", "Data extraction process has started.")
         data = ExtractDataPageYouTube(self.driver)
         LogMessage("OK", "Data extraction process has been completed satisfactorily.")
+        return data
+
+
+    def ExtractDataPageTK(self):
+        """
+        Extracts data from a TikTok page.
+
+        This method initiates the data extraction process using the `ExtractDataPageTiktok` function.
+
+        Returns:
+            dict: A dictionary containing the extracted data from the TikTok page.
+        """
+        LogMessage("OK", "Data extraction process for TikTok has started.")
+        data = ExtractDataPageTiktok(self.driver)
+        LogMessage("OK", "Data extraction process for TikTok has been completed.")
+        return data
+
+
+    def ExtractDataPageIG(self):
+        """
+        Extracts data from a Instagram page.
+
+        This method initiates the data extraction process using the `ExtractDataPageInstagram` function.
+
+        Returns:
+            dict: A dictionary containing the extracted data from the Instagram page.
+        """
+        LogMessage("OK", "Data extraction process for Instagram has started.")
+        data = ExtractDataPageInstagram(self.driver)
+        LogMessage("OK", "Data extraction process for Instagram has been completed.")
         return data

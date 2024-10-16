@@ -19,7 +19,6 @@
 # <https://www.gnu.org/licenses/>.
 
 
-import inspect
 import time
 import datetime
 from selenium import webdriver
@@ -99,10 +98,10 @@ def ExtractDataPageYouTube(driver: webdriver.Firefox) -> dict:
             - count_likes (str): Number of likes for the video.
             - upload (str): Upload date of the video.
             - data (dict): Dictionary containing details about comments, including:
-                - username (list of str): Usernames of commenters.
-                - comment_and_emojis (list of list): Comment and emojis used in comments.
-                - n_like (list of str): Number of likes on each comment.
-                - n_response (list of str): Number of responses to each comment.
+                - usernames (list of str): Usernames of commenters.
+                - comments_and_emojis (list of list): Comment and emojis used in comments.
+                - n_likes (list of str): Number of likes on each comment.
+                - n_responses (list of str): Number of responses to each comment.
                 - date (list of str): Dates of each comment.
     """
     _expand_description(driver)
@@ -119,23 +118,23 @@ def ExtractDataPageYouTube(driver: webdriver.Firefox) -> dict:
         "count_likes": _extract_count_likes(driver),
         "upload": _extract_upload(driver),
         "data": {
-            "username": _extract_usernames(driver),
-            "comment_and_emojis": _extract_comments_emojis(driver),
-            "n_like": _extract_n_likes(driver),
-            "n_response": _extract_n_responses(driver),
+            "usernames": _extract_usernames(driver),
+            "comments_and_emojis": _extract_comments_emojis(driver),
+            "n_likes": _extract_n_likes(driver),
+            "n_responses": _extract_n_responses(driver),
             "date": _extract_dates(driver)
         }
     }
     # Print sizes of extracted data for verification
-    username = len(data['data'].get('username', []))
-    comment_and_emojis = len(data['data'].get('comment_and_emojis', []))
-    n_like = len(data['data'].get('n_like', []))
-    n_response = len(data['data'].get('n_response', []))
+    usernames = len(data['data'].get('usernames', []))
+    comments_and_emojis = len(data['data'].get('comments_and_emojis', []))
+    n_likes = len(data['data'].get('n_likes', []))
+    n_responses = len(data['data'].get('n_responses', []))
     date = len(data['data'].get('date', []))
-    LogMessage("INFO", f'Size of "username": {username}')
-    LogMessage("INFO", f'Size of "comment_and_emojis": {comment_and_emojis}')
-    LogMessage("INFO", f'Size of "n_like": {n_like}')
-    LogMessage("INFO", f'Size of "n_response": {n_response}')
+    LogMessage("INFO", f'Size of "usernames": {usernames}')
+    LogMessage("INFO", f'Size of "comments_and_emojis": {comments_and_emojis}')
+    LogMessage("INFO", f'Size of "n_likes": {n_likes}')
+    LogMessage("INFO", f'Size of "n_responses": {n_responses}')
     LogMessage("INFO", f'Size of "date": {date}')
     return data
 
